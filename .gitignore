@@ -1,0 +1,84 @@
+# Frontend dependencies and build
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.next/
+out/
+
+# Backend dependencies and virtual environments
+venv/
+env/
+ENV/
+.venv
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Logs and temporary files
+logs/
+*.log
+npm-debug.log
+npm-error.log
+yarn-debug.log
+yarn-error.log
+
+# Testing
+coverage/
+.nyc_output/
+.pytest_cache/
+htmlcov/
+
+# Misc
+.cache/
+.tmp/
+temp/
+*.bak
+*.swp
+.eslintcache
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# User uploaded files and data
+TAMS_backend/data/
+!TAMS_backend/data/.gitkeep
+
+# Lock files should be committed, but pnpm/npm specifics
+pnpm-workspace.yaml
