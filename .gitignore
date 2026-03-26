@@ -82,3 +82,5 @@ TAMS_backend/data/
 
 # Lock files should be committed, but pnpm/npm specifics
 pnpm-workspace.yaml
+
+tams-frontend

@@ -28,6 +28,7 @@ app.use('/api/v1/exams',      require('./routes/exams'));
 app.use('/api/v1/whatsapp',   require('./routes/whatsapp'));
 app.use('/api/v1/storage',    require('./routes/storage'));
 app.use('/api/v1/settings',   require('./routes/settings'));
+app.use('/api/v1/subjects', require('./routes/subjects'));
 
 // ── health check ──────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
