@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Plus, ClipboardList, Lock, CheckSquare } from 'lucide-react'
+import { Plus, ClipboardList, Lock, CheckSquare, Trash2 } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,10 +9,20 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { LoadingTable } from '@/components/shared/LoadingTable'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { StudentAvatar } from '@/components/shared/StudentAvatar'
-import { useExams, useSubjects, useCreateExam, useSaveResults, useExamResults, useLockExam } from '@/hooks/useExams'
+import { useExams, useSubjects, useCreateExam, useSaveResults, useExamResults, useLockExam, useDeleteExam } from '@/hooks/useExams'
 import { useBatches, useGroups } from '@/hooks/useBatches'
 import { useStudents } from '@/hooks/useStudents'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -153,6 +163,8 @@ export default function ExamsPage() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [marksExam, setMarksExam] = useState<Exam | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [examToDelete, setExamToDelete] = useState<Exam | null>(null)
 
   const { data: exams = [], isLoading } = useExams({
     batchId: selectedBatchId !== 'all' ? selectedBatchId : undefined,
@@ -162,6 +174,20 @@ export default function ExamsPage() {
   const { data: batches = [] } = useBatches()
   const createExam = useCreateExam()
   const lockExam = useLockExam()
+  const deleteExam = useDeleteExam()
+
+  function confirmDelete(e: Exam) {
+    setExamToDelete(e)
+    setDeleteConfirmOpen(true)
+  }
+
+  async function handleDelete() {
+    if (examToDelete) {
+      await deleteExam.mutateAsync(examToDelete.id)
+      setDeleteConfirmOpen(false)
+      setExamToDelete(null)
+    }
+  }
 
   const form = useForm<ExamSchema>({
     resolver: zodResolver(examSchema),
@@ -284,6 +310,15 @@ export default function ExamsPage() {
                           <Lock className="h-3.5 w-3.5" />
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => confirmDelete(exam)}
+                        title="Delete Exam"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -377,6 +412,31 @@ export default function ExamsPage() {
       </Sheet>
 
       <MarksDialog exam={marksExam} onClose={() => setMarksExam(null)} />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the exam{' '}
+              <span className="font-semibold text-foreground">
+                {examToDelete?.name}
+              </span>{' '}
+              and all student results associated with it. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+              disabled={deleteExam.isPending}
+            >
+              {deleteExam.isPending ? 'Deleting...' : 'Delete Exam'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

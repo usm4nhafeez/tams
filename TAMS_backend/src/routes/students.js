@@ -183,4 +183,23 @@ router.put('/:id', upload.single('photo'), async (req, res, next) => {
   }
 });
 
+// DELETE student
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const student = await db('students').where({ id }).first();
+    if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+
+    await db.transaction(async trx => {
+      // Delete contacts first (foreign key)
+      await trx('student_contacts').where({ student_id: id }).del();
+      // Delete student
+      await trx('students').where({ id }).del();
+    });
+
+    if (student.photo_path) Storage.deleteFile(student.photo_path);
+    res.json({ success: true, message: 'Student deleted successfully' });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

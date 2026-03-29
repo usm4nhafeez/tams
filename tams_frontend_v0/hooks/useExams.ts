@@ -106,3 +106,13 @@ export function useGenerateReportCard() {
     },
   })
 }
+export function useDeleteExam() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/exams/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['exams'] })
+      toast.success('Exam deleted successfully')
+    },
+  })
+}

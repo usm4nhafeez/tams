@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Eye, Pencil, Users, X, Upload } from 'lucide-react'
+import { Plus, Search, Eye, Pencil, Trash2, Users, X, Upload } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,9 +11,19 @@ import { StudentAvatar } from '@/components/shared/StudentAvatar'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { LoadingTable } from '@/components/shared/LoadingTable'
-import { useStudents, useCreateStudent, useUpdateStudent } from '@/hooks/useStudents'
+import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from '@/hooks/useStudents'
 import { useBatches, useGroups } from '@/hooks/useBatches'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -391,6 +401,8 @@ export default function StudentsPage() {
   const [filterGroupId, setFilterGroupId] = useState('all')
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editStudent, setEditStudent] = useState<Student | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
 
   const { data: students = [], isLoading } = useStudents({
     ...filters,
@@ -410,6 +422,21 @@ export default function StudentsPage() {
   function openEdit(s: Student) {
     setEditStudent(s)
     setSheetOpen(true)
+  }
+
+  const deleteStudent = useDeleteStudent()
+
+  function confirmDelete(s: Student) {
+    setStudentToDelete(s)
+    setDeleteConfirmOpen(true)
+  }
+
+  async function handleDelete() {
+    if (studentToDelete) {
+      await deleteStudent.mutateAsync(studentToDelete.id)
+      setDeleteConfirmOpen(false)
+      setStudentToDelete(null)
+    }
   }
 
   return (
@@ -579,6 +606,15 @@ export default function StudentsPage() {
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        title="Delete student"
+                        onClick={() => confirmDelete(student)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -597,6 +633,31 @@ export default function StudentsPage() {
         }}
         student={editStudent}
       />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{' '}
+              <span className="font-semibold text-foreground">
+                {studentToDelete?.firstName} {studentToDelete?.lastName}
+              </span>{' '}
+              and all their associated contact information. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+              disabled={deleteStudent.isPending}
+            >
+              {deleteStudent.isPending ? 'Deleting...' : 'Delete Student'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

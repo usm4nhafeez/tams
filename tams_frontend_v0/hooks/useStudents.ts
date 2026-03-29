@@ -79,3 +79,13 @@ export function useUpdateStudent() {
     },
   })
 }
+export function useDeleteStudent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/students/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: studentKeys.all })
+      toast.success('Student deleted successfully')
+    },
+  })
+}
