@@ -10,6 +10,19 @@ export const studentKeys = {
   profile: (id: string) => ['students', 'profile', id] as const,
 }
 
+const transformStudent = (s: any): Student => {
+  if (!s) return s
+  const nameParts = (s.name || '').split(' ')
+  return {
+    ...s,
+    firstName: s.firstName || nameParts[0] || 'Unknown',
+    lastName: s.lastName || nameParts.slice(1).join(' ') || '',
+    enrollmentId: s.enrollmentId || s.id?.toString().padStart(4, '0') || '',
+    // Use fatherName if parentName is missing
+    parentName: s.parentName || s.fatherName || 'Unknown',
+  }
+}
+
 export function useStudents(filters?: StudentFilters) {
   const params: Record<string, string> = {}
   if (filters?.batchId) params.batch_id = filters.batchId
@@ -19,14 +32,21 @@ export function useStudents(filters?: StudentFilters) {
 
   return useQuery<Student[]>({
     queryKey: studentKeys.lists(filters),
-    queryFn: () => api.get('/students', { params }) as Promise<Student[]>,
+    queryFn: async () => {
+      const data = await api.get('/students', { params }) as Student[]
+      return data.map(transformStudent)
+    },
   })
 }
 
 export function useStudentProfile(id: string) {
   return useQuery<Student>({
     queryKey: studentKeys.profile(id),
-    queryFn: () => api.get(`/students/${id}/profile`) as Promise<Student>,
+    queryFn: async () => {
+      const res = await api.get(`/students/${id}/profile`) as any
+      // The profile endpoint returns { student, fees, attendance, ... }
+      return transformStudent(res.student)
+    },
     enabled: !!id,
   })
 }

@@ -198,7 +198,7 @@ export interface MarksEntryPayload {
 }
 
 // WhatsApp
-export type WhatsAppConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
+export type WhatsAppConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'disabled'
 export type MessageStatus = 'pending' | 'approved' | 'sent' | 'failed' | 'rejected'
 export type MessageType = 'absence_alert' | 'fee_reminder' | 'exam_result' | 'broadcast' | 'receipt'
 

@@ -6,6 +6,7 @@ exports.up = knex => knex.schema.createTable('exams', t => {
   t.string('exam_type').notNullable(); // 'quiz','weekly','board_prep','monthly'
   t.string('date').notNullable();      // 'YYYY-MM-DD'
   t.decimal('max_marks', 6, 2).notNullable();
+  t.decimal('passing_marks', 6, 2).defaultTo(0);
   t.string('session_id');              // groups exams into a test session
   t.text('description');
   t.boolean('is_locked').defaultTo(false);

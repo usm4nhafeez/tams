@@ -44,7 +44,10 @@ export function useSaveAttendance() {
       api.post('/attendance/bulk', {
         batch_id: batchId,
         date,
-        attendance: records,
+        records: records.map((r) => ({
+          student_id: r.studentId,
+          status: r.status,
+        })),
       }) as Promise<{ absentStudents: { studentId: string; name: string; phone: string }[] }>,
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({

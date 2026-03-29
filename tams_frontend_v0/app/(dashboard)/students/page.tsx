@@ -523,7 +523,7 @@ export default function StudentsPage() {
                 <TableRow
                   key={student.id}
                   className="cursor-pointer"
-                  onClick={() => router.push(`/dashboard/students/${student.id}`)}
+                  onClick={() => router.push(`/students/${student.id}`)}
                 >
                   <TableCell>
                     <div className="flex items-center gap-2.5">
@@ -566,7 +566,7 @@ export default function StudentsPage() {
                         size="icon"
                         className="h-7 w-7"
                         title="View profile"
-                        onClick={() => router.push(`/dashboard/students/${student.id}`)}
+                        onClick={() => router.push(`/students/${student.id}`)}
                       >
                         <Eye className="h-3.5 w-3.5" />
                       </Button>

@@ -179,7 +179,10 @@ export default function StudentProfilePage({
   const studentAttendance = attendanceSummaries.find((a) => a.studentId === id)
 
   // Exams for the student's batch
-  const { data: exams = [] } = useExams({ batchId: student?.batchId })
+  const { data: exams = [] } = useExams(
+    { batchId: student?.batchId },
+    { enabled: !!student?.batchId }
+  )
 
   // WhatsApp logs — filter by studentId or parent phone
   const { data: allMessages = [] } = useWALogs()
@@ -315,7 +318,7 @@ export default function StudentProfilePage({
                   <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span>
                     {formatDate(student.dateOfBirth)} ·{' '}
-                    {student.gender.charAt(0).toUpperCase() + student.gender.slice(1)}
+                    {student.gender ? (student.gender.charAt(0).toUpperCase() + student.gender.slice(1)) : 'Unknown'}
                   </span>
                 </div>
                 {student.address && (
@@ -504,8 +507,8 @@ export default function StudentProfilePage({
                       <TableCell>{exam.subject}</TableCell>
                       <TableCell>
                         <StatusBadge
-                          status={exam.type}
-                          label={exam.type.charAt(0).toUpperCase() + exam.type.slice(1)}
+                          status={exam.type || 'unknown'}
+                          label={(exam.type || 'N/A').charAt(0).toUpperCase() + (exam.type || 'N/A').slice(1)}
                         />
                       </TableCell>
                       <TableCell>{formatDate(exam.examDate)}</TableCell>

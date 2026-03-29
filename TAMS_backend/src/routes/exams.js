@@ -31,6 +31,18 @@ router.post('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET exam results
+router.get('/:id/results', async (req, res, next) => {
+  try {
+    const exam_id = req.params.id;
+    const results = await db('exam_results')
+      .select('exam_results.*', 'students.name as student_name')
+      .join('students', 'exam_results.student_id', 'students.id')
+      .where({ exam_id });
+    res.json({ success: true, data: results });
+  } catch (err) { next(err); }
+});
+
 // POST bulk save marks
 router.post('/:id/results', async (req, res, next) => {
   try {

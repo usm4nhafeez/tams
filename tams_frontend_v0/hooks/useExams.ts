@@ -11,7 +11,16 @@ export const examKeys = {
   results: (examId: string) => ['exams', 'results', examId] as const,
 }
 
-export function useExams(filters?: ExamFilters) {
+const transformExam = (e: any): Exam => {
+  if (!e) return e
+  return {
+    ...e,
+    type: e.type || e.examType || e.exam_type,
+    examDate: e.examDate || e.date,
+  }
+}
+
+export function useExams(filters?: ExamFilters, options?: { enabled?: boolean }) {
   const params: Record<string, string> = {}
   if (filters?.batchId) params.batch_id = filters.batchId
   if (filters?.type && filters.type !== 'all') params.exam_type = filters.type
@@ -19,7 +28,11 @@ export function useExams(filters?: ExamFilters) {
 
   return useQuery<Exam[]>({
     queryKey: examKeys.lists(filters),
-    queryFn: () => api.get('/exams', { params }) as Promise<Exam[]>,
+    queryFn: async () => {
+      const data = await api.get('/exams', { params }) as any[]
+      return data.map(transformExam)
+    },
+    enabled: options?.enabled !== false,
   })
 }
 
