@@ -101,7 +101,7 @@ export default function AttendancePage() {
             </SelectTrigger>
             <SelectContent>
               {activeBatches.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

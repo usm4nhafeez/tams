@@ -239,7 +239,7 @@ export default function ExamsPage() {
             <SelectTrigger className="w-40"><SelectValue placeholder="All Batches" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Batches</SelectItem>
-              {batches.filter(b => !b.isArchived).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              {batches.filter(b => !b.isArchived).map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -342,7 +342,7 @@ export default function ExamsPage() {
               <Label>Batch</Label>
               <Select value={form.watch('batchId') || undefined} onValueChange={(v) => form.setValue('batchId', v, { shouldValidate: true })}>                <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
                 <SelectContent>
-                  {batches.filter(b => !b.isArchived).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  {batches.filter(b => !b.isArchived).map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               {form.formState.errors.batchId && <p className="text-xs text-destructive">{form.formState.errors.batchId.message}</p>}
@@ -353,7 +353,7 @@ export default function ExamsPage() {
                 <SelectTrigger><SelectValue placeholder="All groups" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">All groups</SelectItem>
-                  {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                  {groups.map((g) => <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

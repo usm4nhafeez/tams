@@ -129,7 +129,7 @@ export default function FeesPage() {
             <SelectTrigger className="w-40"><SelectValue placeholder="All Batches" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Batches</SelectItem>
-              {batches.filter(b => !b.isArchived).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              {batches.filter(b => !b.isArchived).map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

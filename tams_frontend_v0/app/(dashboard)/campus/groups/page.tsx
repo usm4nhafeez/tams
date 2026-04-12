@@ -77,7 +77,7 @@ export default function GroupsPage() {
           <SelectContent>
             <SelectItem value="all">All Batches</SelectItem>
             {activeBatches.map((b) => (
-              <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -147,7 +147,7 @@ export default function GroupsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {activeBatches.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
