@@ -33,12 +33,14 @@ router.get("/", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const {
+      name,
       batch_id,
       group_id,
       subject,
       exam_type,
       date,
       max_marks,
+      passing_marks,
       session_id,
       description,
     } = req.body;
@@ -51,12 +53,14 @@ router.post("/", async (req, res, next) => {
         });
 
     const [id] = await db("exams").insert({
+      name,
       batch_id,
       group_id,
       subject,
       exam_type,
       date,
       max_marks,
+      passing_marks: passing_marks || 0,
       session_id,
       description,
     });

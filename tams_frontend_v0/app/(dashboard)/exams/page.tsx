@@ -26,7 +26,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -161,7 +160,7 @@ export default function ExamsPage() {
   const [selectedBatchId, setSelectedBatchId] = useState('all')
   const [selectedType, setSelectedType] = useState('all')
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
-  const [sheetOpen, setSheetOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [marksExam, setMarksExam] = useState<Exam | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [examToDelete, setExamToDelete] = useState<Exam | null>(null)
@@ -197,6 +196,9 @@ export default function ExamsPage() {
   const watchBatchId = form.watch('batchId')
   const { data: groups = [] } = useGroups(watchBatchId || undefined)
   const { data: subjects = [] } = useSubjects(watchBatchId || undefined)
+  const uniqueSubjects = subjects.filter(
+    (subject, index, all) => all.findIndex((candidate) => candidate.name === subject.name) === index
+  )
 
   async function onSubmit(values: ExamSchema) {
     const payload: ExamFormData = {
@@ -210,7 +212,7 @@ export default function ExamsPage() {
       passingMarks: values.passingMarks,
     }
     await createExam.mutateAsync(payload)
-    setSheetOpen(false)
+    setDialogOpen(false)
     form.reset()
   }
 
@@ -220,7 +222,7 @@ export default function ExamsPage() {
         title="Exams"
         description="Create and manage examinations and results"
         action={
-          <Button size="sm" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
             New Exam
           </Button>
@@ -279,7 +281,7 @@ export default function ExamsPage() {
             ) : exams.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="py-14">
-                  <EmptyState icon={ClipboardList} title="No exams found" description="Create an exam to get started" action={{ label: 'Create Exam', onClick: () => setSheetOpen(true) }} />
+                  <EmptyState icon={ClipboardList} title="No exams found" description="Create an exam to get started" action={{ label: 'Create Exam', onClick: () => setDialogOpen(true) }} />
                 </TableCell>
               </TableRow>
             ) : (
@@ -328,72 +330,114 @@ export default function ExamsPage() {
         </Table>
       </div>
 
-      {/* Create Exam Sheet */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="overflow-y-auto">
-          <SheetHeader><SheetTitle>Create Exam</SheetTitle></SheetHeader>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-4">
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl overflow-hidden rounded-[28px] border border-white/70 bg-white/96 p-0 shadow-[0_30px_80px_rgba(15,23,42,0.24)] backdrop-blur dark:border-white/10 dark:bg-slate-950/94">
+          <DialogHeader className="border-b border-border/60 px-6 py-5">
+            <DialogTitle className="text-2xl font-semibold">Create Exam</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 px-6 py-5">
             <div className="space-y-1">
               <Label>Exam Name</Label>
               <Input {...form.register('name')} placeholder="e.g. Monthly Test - March" />
               {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
             </div>
-            <div className="space-y-1">
-              <Label>Batch</Label>
-              <Select value={form.watch('batchId') || undefined} onValueChange={(v) => form.setValue('batchId', v, { shouldValidate: true })}>                <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
-                <SelectContent>
-                  {batches.filter(b => !b.isArchived).map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.batchId && <p className="text-xs text-destructive">{form.formState.errors.batchId.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <Label>Group (optional)</Label>
-              <Select value={form.watch('groupId') || '__none__'} onValueChange={(v) => form.setValue('groupId', v === '__none__' ? '' : v)}>
-                <SelectTrigger><SelectValue placeholder="All groups" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">All groups</SelectItem>
-                  {groups.map((g) => <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Subject</Label>
-              {subjects.length > 0 ? (
-                <Select value={form.watch('subject') || undefined} onValueChange={(v) => form.setValue('subject', v, { shouldValidate: true })}>                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-1">
+                <Label>Batch</Label>
+                <Select
+                  value={form.watch('batchId') || undefined}
+                  onValueChange={(v) => form.setValue('batchId', v, { shouldValidate: true })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select batch" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {subjects.map((s) => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                    {batches
+                      .filter((b) => !b.isArchived)
+                      .map((b) => (
+                        <SelectItem key={b.id} value={String(b.id)}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
-              ) : (
-                <Input {...form.register('subject')} placeholder="e.g. Mathematics" />
-              )}
-              {form.formState.errors.subject && <p className="text-xs text-destructive">{form.formState.errors.subject.message}</p>}
+                {form.formState.errors.batchId && <p className="text-xs text-destructive">{form.formState.errors.batchId.message}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <Label>Group (optional)</Label>
+                <Select
+                  value={form.watch('groupId') || '__none__'}
+                  onValueChange={(v) => form.setValue('groupId', v === '__none__' ? '' : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All groups" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">All groups</SelectItem>
+                    {groups.map((g) => (
+                      <SelectItem key={g.id} value={String(g.id)}>
+                        {g.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Exam Type</Label>
-              <Controller
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-1">
+                <Label>Subject</Label>
+                {uniqueSubjects.length > 0 ? (
+                  <Select
+                    value={form.watch('subject') || undefined}
+                    onValueChange={(v) => form.setValue('subject', v, { shouldValidate: true })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                      <SelectItem value="annual">Annual</SelectItem>
+                      {uniqueSubjects.map((subject) => (
+                        <SelectItem key={subject.id} value={subject.name}>
+                          {subject.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                ) : (
+                  <Input {...form.register('subject')} placeholder="e.g. Mathematics" />
                 )}
-              />
+                {form.formState.errors.subject && <p className="text-xs text-destructive">{form.formState.errors.subject.message}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <Label>Exam Type</Label>
+                <Controller
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="annual">Annual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Exam Date</Label>
-              <Input type="date" {...form.register('examDate')} />
-              {form.formState.errors.examDate && <p className="text-xs text-destructive">{form.formState.errors.examDate.message}</p>}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-1 md:col-span-1">
+                <Label>Exam Date</Label>
+                <Input type="date" {...form.register('examDate')} />
+                {form.formState.errors.examDate && <p className="text-xs text-destructive">{form.formState.errors.examDate.message}</p>}
+              </div>
               <div className="space-y-1">
                 <Label>Max Marks</Label>
                 <Input type="number" min={1} {...form.register('maxMarks', { valueAsNumber: true })} />
@@ -403,13 +447,13 @@ export default function ExamsPage() {
                 <Input type="number" min={0} {...form.register('passingMarks', { valueAsNumber: true })} />
               </div>
             </div>
-            <SheetFooter>
-              <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
+            <DialogFooter className="border-t border-border/60 pt-4">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createExam.isPending}>Create Exam</Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <MarksDialog exam={marksExam} onClose={() => setMarksExam(null)} />
 

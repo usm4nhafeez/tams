@@ -48,12 +48,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -93,7 +93,7 @@ const studentSchema = z.object({
 
 type StudentSchema = z.infer<typeof studentSchema>;
 
-function StudentFormSheet({
+function StudentFormDialog({
   open,
   onOpenChange,
   student,
@@ -159,7 +159,6 @@ function StudentFormSheet({
 
   async function onSubmit(values: StudentSchema) {
     const fd = new FormData();
-    // Fields valid for the students table (both create and update)
     fd.append("name", `${values.firstName} ${values.lastName}`.trim());
     fd.append("dob", values.dateOfBirth);
     fd.append("gender", values.gender);
@@ -168,17 +167,16 @@ function StudentFormSheet({
     fd.append("father_name", values.parentName);
     if (values.address) fd.append("address", values.address);
     fd.append("admission_fee", String(values.admissionFee));
+    fd.append("discount_value", String(values.monthlyDiscount));
+    fd.append("parent_name", values.parentName);
+    fd.append("phone", values.parentPhone);
+    if (values.parentEmail) fd.append("parent_email", values.parentEmail);
     if (photoFile) fd.append("photo", photoFile);
 
     if (student) {
-      // PUT spreads directly into students table — omit contact fields
       await updateStudent.mutateAsync({ id: student.id, formData: fd });
     } else {
-      // POST handles parent_name/phone separately into student_contacts
-      fd.append("admission_date", values.dateOfBirth);
-      fd.append("parent_name", values.parentName);
-      fd.append("phone", values.parentPhone);
-      if (values.parentEmail) fd.append("parent_email", values.parentEmail);
+      fd.append("admission_date", new Date().toISOString().split("T")[0]);
       await createStudent.mutateAsync(fd);
     }
     onOpenChange(false);
@@ -187,15 +185,17 @@ function StudentFormSheet({
   const isPending = createStudent.isPending || updateStudent.isPending;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{student ? "Edit Student" : "Add Student"}</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[88vh] max-w-4xl overflow-y-auto rounded-[28px] border border-white/70 bg-white/96 p-0 shadow-[0_30px_80px_rgba(15,23,42,0.24)] backdrop-blur dark:border-white/10 dark:bg-slate-950/94">
+        <DialogHeader className="border-b border-border/60 px-6 py-5">
+          <DialogTitle className="text-2xl font-semibold">
+            {student ? "Edit Student" : "Add Student"}
+          </DialogTitle>
+        </DialogHeader>
 
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="px-4 pb-4 space-y-4"
+          className="px-6 py-5 space-y-4"
         >
           <Tabs defaultValue="personal" className="w-full">
             <TabsList className="grid w-full grid-cols-4 mb-4">
@@ -435,7 +435,7 @@ function StudentFormSheet({
             </TabsContent>
           </Tabs>
 
-          <SheetFooter className="flex-row justify-end gap-2 pt-2">
+          <DialogFooter className="flex-row justify-end gap-2 border-t border-border/60 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -450,10 +450,10 @@ function StudentFormSheet({
                   ? "Save Changes"
                   : "Add Student"}
             </Button>
-          </SheetFooter>
+          </DialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -462,7 +462,7 @@ export default function StudentsPage() {
   const [filters, setFilters] = useState<StudentFilters>({ status: "active" });
   const [filterBatchId, setFilterBatchId] = useState("all");
   const [filterGroupId, setFilterGroupId] = useState("all");
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
@@ -479,12 +479,12 @@ export default function StudentsPage() {
 
   function openAdd() {
     setEditStudent(null);
-    setSheetOpen(true);
+    setDialogOpen(true);
   }
 
   function openEdit(s: Student) {
     setEditStudent(s);
-    setSheetOpen(true);
+    setDialogOpen(true);
   }
 
   const deleteStudent = useDeleteStudent();
@@ -689,11 +689,11 @@ export default function StudentsPage() {
         </Table>
       </div>
 
-      <StudentFormSheet
+      <StudentFormDialog
         key={editStudent?.id ?? "__new__"}
-        open={sheetOpen}
+        open={dialogOpen}
         onOpenChange={(open) => {
-          setSheetOpen(open);
+          setDialogOpen(open);
           if (!open) setEditStudent(null);
         }}
         student={editStudent}

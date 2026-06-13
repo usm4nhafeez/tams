@@ -20,10 +20,26 @@ export const examKeys = {
 
 const transformExam = (e: any): Exam => {
   if (!e) return e;
+  const fallbackName = [e.subject, e.examType || e.exam_type, e.date]
+    .filter(Boolean)
+    .join(" • ");
   return {
     ...e,
+    id: String(e.id ?? ""),
+    batchId: String(e.batchId ?? e.batch_id ?? ""),
+    groupId: e.groupId ? String(e.groupId) : e.group_id ? String(e.group_id) : undefined,
+    name: e.name || fallbackName || "Exam",
     type: e.type || e.examType || e.exam_type,
     examDate: e.examDate || e.date,
+    maxMarks: Number(e.maxMarks ?? e.max_marks ?? 0),
+    passingMarks: Number(e.passingMarks ?? e.passing_marks ?? 0),
+    isLocked: Boolean(e.isLocked ?? e.is_locked),
+    batch: e.batchName || e.batch_name
+      ? {
+          id: String(e.batchId ?? e.batch_id ?? ""),
+          name: String(e.batchName ?? e.batch_name),
+        }
+      : undefined,
   };
 };
 
@@ -59,7 +75,20 @@ export function useSubjects(batchId?: string) {
 export function useExamResults(examId: string) {
   return useQuery<ExamResult[]>({
     queryKey: examKeys.results(examId),
-    queryFn: () => api.get(`/exams/${examId}/results`) as Promise<ExamResult[]>,
+    queryFn: async () => {
+      const data = (await api.get(`/exams/${examId}/results`)) as Array<Record<string, unknown>>
+      return data.map((result) => ({
+        ...result,
+        id: String(result.id ?? ''),
+        examId: String(result.examId ?? result.exam_id ?? examId),
+        studentId: String(result.studentId ?? result.student_id ?? ''),
+        marksObtained:
+          result.marksObtained == null && result.marks_obtained == null
+            ? null
+            : Number(result.marksObtained ?? result.marks_obtained ?? 0),
+        isAbsent: Boolean(result.isAbsent ?? result.is_absent),
+      })) as ExamResult[]
+    },
     enabled: !!examId,
   });
 }

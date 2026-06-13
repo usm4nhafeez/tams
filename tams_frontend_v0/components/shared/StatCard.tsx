@@ -12,34 +12,34 @@ interface StatCardProps {
 
 const variantStyles = {
   blue: {
-    card: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30',
-    icon: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400',
-    title: 'text-blue-700 dark:text-blue-300',
-    value: 'text-blue-900 dark:text-blue-100',
+    card: 'border-sky-200/70 bg-[linear-gradient(135deg,rgba(240,249,255,0.95),rgba(224,242,254,0.88))] dark:border-sky-900/40 dark:bg-[linear-gradient(135deg,rgba(12,74,110,0.28),rgba(3,37,65,0.24))]',
+    icon: 'bg-white/80 text-sky-700 dark:bg-sky-400/12 dark:text-sky-200',
+    title: 'text-sky-800/80 dark:text-sky-100/80',
+    value: 'text-sky-950 dark:text-sky-50',
   },
   green: {
-    card: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30',
-    icon: 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400',
-    title: 'text-green-700 dark:text-green-300',
-    value: 'text-green-900 dark:text-green-100',
+    card: 'border-emerald-200/70 bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(209,250,229,0.9))] dark:border-emerald-900/40 dark:bg-[linear-gradient(135deg,rgba(6,78,59,0.3),rgba(2,44,34,0.26))]',
+    icon: 'bg-white/80 text-emerald-700 dark:bg-emerald-400/12 dark:text-emerald-200',
+    title: 'text-emerald-800/80 dark:text-emerald-100/80',
+    value: 'text-emerald-950 dark:text-emerald-50',
   },
   red: {
-    card: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30',
-    icon: 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400',
-    title: 'text-red-700 dark:text-red-300',
-    value: 'text-red-900 dark:text-red-100',
+    card: 'border-rose-200/70 bg-[linear-gradient(135deg,rgba(255,241,242,0.96),rgba(255,228,230,0.88))] dark:border-rose-900/40 dark:bg-[linear-gradient(135deg,rgba(127,29,29,0.3),rgba(76,5,25,0.24))]',
+    icon: 'bg-white/80 text-rose-700 dark:bg-rose-400/12 dark:text-rose-200',
+    title: 'text-rose-800/80 dark:text-rose-100/80',
+    value: 'text-rose-950 dark:text-rose-50',
   },
   navy: {
-    card: 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/30',
-    icon: 'bg-[#1E3A5F]/10 text-[#1E3A5F] dark:bg-blue-900/50 dark:text-blue-300',
-    title: 'text-slate-600 dark:text-slate-400',
-    value: 'text-slate-900 dark:text-slate-100',
+    card: 'border-slate-200/75 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(241,245,249,0.94))] dark:border-slate-800/60 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.68),rgba(30,41,59,0.55))]',
+    icon: 'bg-slate-900 text-white dark:bg-white/10 dark:text-white',
+    title: 'text-slate-700 dark:text-slate-300',
+    value: 'text-slate-950 dark:text-white',
   },
   yellow: {
-    card: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/30',
-    icon: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50 dark:text-yellow-400',
-    title: 'text-yellow-700 dark:text-yellow-300',
-    value: 'text-yellow-900 dark:text-yellow-100',
+    card: 'border-amber-200/70 bg-[linear-gradient(135deg,rgba(255,251,235,0.96),rgba(254,243,199,0.9))] dark:border-amber-900/40 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.26),rgba(69,26,3,0.22))]',
+    icon: 'bg-white/80 text-amber-700 dark:bg-amber-400/12 dark:text-amber-200',
+    title: 'text-amber-800/80 dark:text-amber-100/80',
+    value: 'text-amber-950 dark:text-amber-50',
   },
 }
 
@@ -55,7 +55,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        'rounded-lg border p-4 shadow-sm',
+        'rounded-[24px] border p-4 shadow-[0_20px_40px_rgba(15,23,42,0.08)] transition-transform duration-200 hover:-translate-y-0.5',
         styles.card,
         className
       )}
@@ -66,7 +66,7 @@ export function StatCard({
           <p className={cn('mt-1 text-2xl font-bold', styles.value)}>{value}</p>
           {subText && <p className="mt-1 text-xs text-muted-foreground">{subText}</p>}
         </div>
-        <div className={cn('ml-3 rounded-lg p-2 shrink-0', styles.icon)}>
+        <div className={cn('ml-3 rounded-2xl p-2.5 shrink-0 shadow-sm', styles.icon)}>
           <Icon className="h-5 w-5" />
         </div>
       </div>

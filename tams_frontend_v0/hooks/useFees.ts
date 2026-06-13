@@ -9,6 +9,51 @@ export const feeKeys = {
   lists: (filters?: FeeFilters) => ['fees', 'list', filters] as const,
 }
 
+function transformFeeRecord(record: Record<string, unknown>): FeeRecord {
+  const studentName = String(record.studentName ?? record.student_name ?? '')
+  const nameParts = studentName.split(' ').filter(Boolean)
+
+  return {
+    ...record,
+    id: String(record.id ?? ''),
+    studentId: String(record.studentId ?? record.student_id ?? ''),
+    month: String(record.month ?? record.monthYear ?? record.month_year ?? ''),
+    amount: Number(record.amount ?? record.amountDue ?? record.amount_due ?? 0),
+    paidAmount: Number(record.paidAmount ?? record.amountPaid ?? record.amount_paid ?? 0),
+    dueDate: String(record.dueDate ?? record.paidDate ?? record.paid_date ?? ''),
+    paidAt: record.paidAt
+      ? String(record.paidAt)
+      : record.paidDate
+        ? String(record.paidDate)
+        : record.paid_date
+          ? String(record.paid_date)
+          : undefined,
+    receiptNumber: record.receiptNumber
+      ? String(record.receiptNumber)
+      : record.receiptNo
+        ? String(record.receiptNo)
+        : record.receipt_no
+          ? String(record.receipt_no)
+          : undefined,
+    createdAt: String(record.createdAt ?? record.created_at ?? ''),
+    updatedAt: String(record.updatedAt ?? record.updated_at ?? ''),
+    student: studentName
+      ? {
+          id: String(record.studentId ?? record.student_id ?? ''),
+          firstName: nameParts[0] ?? studentName,
+          lastName: nameParts.slice(1).join(' '),
+          photoUrl: record.photoUrl ?? record.photo_path ?? undefined,
+          batch: record.batchName || record.batch_name
+            ? {
+                id: '',
+                name: String(record.batchName ?? record.batch_name ?? ''),
+              }
+            : undefined,
+        }
+      : undefined,
+  } as FeeRecord
+}
+
 export function useFees(filters?: FeeFilters) {
   const params: Record<string, string> = {}
   if (filters?.studentId) params.student_id = filters.studentId
@@ -18,7 +63,10 @@ export function useFees(filters?: FeeFilters) {
 
   return useQuery<FeeRecord[]>({
     queryKey: feeKeys.lists(filters),
-    queryFn: () => api.get('/fees', { params }) as Promise<FeeRecord[]>,
+    queryFn: async () => {
+      const data = (await api.get('/fees', { params })) as Array<Record<string, unknown>>
+      return data.map(transformFeeRecord)
+    },
   })
 }
 

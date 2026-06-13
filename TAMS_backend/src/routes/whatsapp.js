@@ -7,7 +7,7 @@ router.get('/status', (req, res) => res.json({ success: true, data: WA.getStatus
 
 // GET QR code for scanning
 router.get('/qr', (req, res) => {
-  if (!WA.qrCode) return res.json({ success: false, message: 'No QR pending or already connected' });
+  if (!WA.qrCode) return res.json({ success: true, data: { qr: null } });
   res.json({ success: true, data: { qr: WA.qrCode } });
 });
 
@@ -55,16 +55,25 @@ router.post('/absence', async (req, res, next) => {
 // GET message logs
 router.get('/logs', async (req, res, next) => {
   try {
-    const { student_id, message_type, status, date_from, date_to } = req.query;
+    const {
+      student_id,
+      message_type,
+      status,
+      date_from,
+      date_to,
+      type,
+      start_date,
+      end_date,
+    } = req.query;
     const query = db('whatsapp_logs')
       .select('whatsapp_logs.*', 'students.name as student_name')
       .leftJoin('students', 'whatsapp_logs.student_id', 'students.id');
 
     if (student_id)   query.where('whatsapp_logs.student_id', student_id);
-    if (message_type) query.where('whatsapp_logs.message_type', message_type);
+    if (message_type || type) query.where('whatsapp_logs.message_type', message_type || type);
     if (status)       query.where('whatsapp_logs.status', status);
-    if (date_from)    query.where('whatsapp_logs.sent_at', '>=', date_from);
-    if (date_to)      query.where('whatsapp_logs.sent_at', '<=', date_to);
+    if (date_from || start_date) query.where('whatsapp_logs.sent_at', '>=', date_from || start_date);
+    if (date_to || end_date) query.where('whatsapp_logs.sent_at', '<=', date_to || end_date);
 
     res.json({ success: true, data: await query.orderBy('whatsapp_logs.created_at', 'desc').limit(200) });
   } catch (err) { next(err); }

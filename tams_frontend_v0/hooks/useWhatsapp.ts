@@ -11,6 +11,21 @@ export const waKeys = {
   queue: ['whatsapp', 'queue'] as const,
 }
 
+function transformMessage(raw: Record<string, unknown>): WhatsAppMessage {
+  return {
+    ...raw,
+    id: String(raw.id ?? `${raw.phone ?? raw.parent_number ?? 'msg'}-${raw.created_at ?? Date.now()}`),
+    studentId: raw.studentId ? String(raw.studentId) : raw.student_id ? String(raw.student_id) : undefined,
+    phone: String(raw.phone ?? raw.parentNumber ?? raw.parent_number ?? raw.whatsapp_number ?? ''),
+    messageType: String(raw.messageType ?? raw.message_type ?? raw.type ?? 'broadcast') as WhatsAppMessage['messageType'],
+    content: String(raw.content ?? raw.messageBody ?? raw.message_body ?? raw.balance ?? ''),
+    status: String(raw.status ?? 'pending') as WhatsAppMessage['status'],
+    sentAt: raw.sentAt ? String(raw.sentAt) : raw.sent_at ? String(raw.sent_at) : undefined,
+    error: raw.error ? String(raw.error) : raw.error_log ? String(raw.error_log) : undefined,
+    createdAt: String(raw.createdAt ?? raw.created_at ?? raw.sent_at ?? ''),
+  }
+}
+
 export function useWAStatus() {
   return useQuery<WhatsAppStatus>({
     queryKey: waKeys.status,
@@ -22,7 +37,10 @@ export function useWAStatus() {
 export function useWAQR(enabled: boolean) {
   return useQuery<string>({
     queryKey: waKeys.qr,
-    queryFn: () => api.get('/whatsapp/qr') as Promise<string>,
+    queryFn: async () => {
+      const data = (await api.get('/whatsapp/qr')) as { qr?: string }
+      return data?.qr ?? ''
+    },
     refetchInterval: 10000,
     enabled,
   })
@@ -30,21 +48,35 @@ export function useWAQR(enabled: boolean) {
 
 export function useWALogs(filters?: MessageFilters) {
   const params: Record<string, string> = {}
-  if (filters?.messageType && filters.messageType !== 'all') params.type = filters.messageType
+  if (filters?.messageType && filters.messageType !== 'all') params.message_type = filters.messageType
   if (filters?.status && filters.status !== 'all') params.status = filters.status
-  if (filters?.startDate) params.start_date = filters.startDate
-  if (filters?.endDate) params.end_date = filters.endDate
+  if (filters?.startDate) params.date_from = filters.startDate
+  if (filters?.endDate) params.date_to = filters.endDate
 
   return useQuery<WhatsAppMessage[]>({
     queryKey: waKeys.logs(filters),
-    queryFn: () => api.get('/whatsapp/logs', { params }) as Promise<WhatsAppMessage[]>,
+    queryFn: async () => {
+      const data = (await api.get('/whatsapp/logs', { params })) as Array<Record<string, unknown>>
+      return data.map(transformMessage)
+    },
   })
 }
 
 export function useWAQueue() {
   return useQuery<WhatsAppMessage[]>({
     queryKey: waKeys.queue,
-    queryFn: () => api.get('/whatsapp/queue') as Promise<WhatsAppMessage[]>,
+    queryFn: async () => {
+      const data = (await api.get('/whatsapp/queue')) as Array<Record<string, unknown>>
+      return data.map((item) =>
+        transformMessage({
+          ...item,
+          phone: item.whatsapp_number,
+          message_type: 'fee_reminder',
+          message_body: `Pending fee reminder for ${String(item.name ?? 'student')}`,
+          created_at: new Date().toISOString(),
+        })
+      )
+    },
     refetchInterval: 10000,
   })
 }

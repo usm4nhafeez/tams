@@ -9,11 +9,29 @@ export const attendanceKeys = {
   monthly: (batchId: string, month: string) => ['attendance', 'monthly', batchId, month] as const,
 }
 
+function normalizeAttendanceStatus(status: string) {
+  if (status === 'P') return 'present'
+  if (status === 'A') return 'absent'
+  if (status === 'L') return 'leave'
+  return status
+}
+
 export function useAttendance(batchId: string, date: string) {
   return useQuery<AttendanceRecord[]>({
     queryKey: attendanceKeys.byDate(batchId, date),
-    queryFn: () =>
-      api.get('/attendance', { params: { batch_id: batchId, date } }) as Promise<AttendanceRecord[]>,
+    queryFn: async () => {
+      const data = (await api.get('/attendance', {
+        params: { batch_id: batchId, date },
+      })) as Array<Record<string, unknown>>
+      return data.map((record) => ({
+        ...record,
+        id: String(record.id ?? ''),
+        studentId: String(record.studentId ?? record.student_id ?? ''),
+        date: String(record.date ?? ''),
+        status: normalizeAttendanceStatus(String(record.status ?? 'present')),
+        markedAt: String(record.markedAt ?? record.updatedAt ?? record.updated_at ?? ''),
+      })) as AttendanceRecord[]
+    },
     enabled: !!batchId && !!date,
   })
 }
@@ -21,10 +39,19 @@ export function useAttendance(batchId: string, date: string) {
 export function useMonthlyAttendance(batchId: string, month: string) {
   return useQuery<AttendanceSummary[]>({
     queryKey: attendanceKeys.monthly(batchId, month),
-    queryFn: () =>
-      api.get('/attendance/monthly', {
+    queryFn: async () => {
+      const data = (await api.get('/attendance/monthly', {
         params: { batch_id: batchId, month },
-      }) as Promise<AttendanceSummary[]>,
+      })) as Array<Record<string, unknown>>
+      return data.map((summary) => ({
+        studentId: String(summary.studentId ?? summary.student_id ?? ''),
+        totalDays: Number(summary.totalDays ?? summary.total_days ?? 0),
+        presentDays: Number(summary.presentDays ?? summary.present_days ?? 0),
+        absentDays: Number(summary.absentDays ?? summary.absent_days ?? 0),
+        leaveDays: Number(summary.leaveDays ?? summary.leave_days ?? 0),
+        percentage: Number(summary.percentage ?? 0),
+      }))
+    },
     enabled: !!batchId && !!month,
   })
 }

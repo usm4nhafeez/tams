@@ -157,6 +157,11 @@ router.put('/:id', upload.single('photo'), async (req, res, next) => {
     const updates = { ...req.body, updated_at: new Date().toISOString() };
     delete updates.id;
     delete updates.photo;
+    delete updates.parent_name;
+    delete updates.phone;
+    delete updates.parent_email;
+    delete updates.whatsapp_number;
+    delete updates.relation;
 
     if (req.file) {
       try {
@@ -175,7 +180,36 @@ router.put('/:id', upload.single('photo'), async (req, res, next) => {
       }
     }
 
-    await db('students').where({ id }).update(updates);
+    await db.transaction(async (trx) => {
+      await trx('students').where({ id }).update(updates);
+
+      if (req.body.parent_name || req.body.phone) {
+        const primaryContact = await trx('student_contacts')
+          .where({ student_id: id, is_primary: true })
+          .first();
+
+        const contactPayload = {
+          parent_name: req.body.parent_name || existing.father_name || 'Guardian',
+          phone: req.body.phone || primaryContact?.phone || '',
+          whatsapp_number: req.body.whatsapp_number || req.body.phone || primaryContact?.whatsapp_number || primaryContact?.phone || '',
+          relation: req.body.relation || primaryContact?.relation || 'father',
+          updated_at: new Date().toISOString(),
+        };
+
+        if (primaryContact) {
+          await trx('student_contacts')
+            .where({ id: primaryContact.id })
+            .update(contactPayload);
+        } else if (contactPayload.phone) {
+          await trx('student_contacts').insert({
+            student_id: id,
+            ...contactPayload,
+            is_primary: true,
+          });
+        }
+      }
+    });
+
     res.json({ success: true, data: await db('students').where({ id }).first() });
   } catch (err) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);

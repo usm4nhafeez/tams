@@ -28,7 +28,7 @@
   --chart-3: oklch(0.65 0.18 45);
   --chart-4: oklch(0.55 0.22 25);
   --chart-5: oklch(0.6 0.12 200);
-  --radius: 0.5rem;
+  --radius: 0.9rem;
   --sidebar: oklch(0.25 0.06 250);
   --sidebar-foreground: oklch(0.95 0.01 250);
   --sidebar-primary: oklch(0.55 0.12 200);
@@ -143,5 +143,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 28%, white);
+    color: var(--foreground);
   }
 }

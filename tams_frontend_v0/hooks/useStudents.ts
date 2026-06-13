@@ -13,21 +13,43 @@ export const studentKeys = {
 const transformStudent = (s: any): Student => {
   if (!s) return s;
   const nameParts = (s.name || "").split(" ");
+  const batchName = s.batch?.name || s.batchName || s.batch_name;
+  const groupName = s.group?.name || s.groupName || s.group_name;
   return {
     ...s,
+    id: String(s.id ?? ""),
     firstName: s.firstName || nameParts[0] || "Unknown",
     lastName: s.lastName || nameParts.slice(1).join(" ") || "",
     enrollmentId: s.enrollmentId || s.id?.toString().padStart(4, "0") || "",
     parentName: s.parentName || s.fatherName || "Unknown",
-    // Backend returns phone; map to parentPhone for the frontend form
     parentPhone: s.parentPhone || s.phone || "",
-    // Backend returns dob; map to dateOfBirth for the frontend
     dateOfBirth: s.dateOfBirth || s.dob || "",
+    photoUrl: s.photoUrl || s.photoPath || s.photo_path,
+    joiningDate: s.joiningDate || s.admissionDate || s.admission_date || "",
+    admissionFee: Number(s.admissionFee ?? s.admission_fee ?? 0),
+    monthlyDiscount: Number(s.monthlyDiscount ?? s.discountValue ?? s.discount_value ?? 0),
+    isActive:
+      typeof s.isActive === "boolean"
+        ? s.isActive
+        : (s.status || "active") === "active",
     batchId: s.batchId
       ? String(s.batchId)
       : s.batch_id
         ? String(s.batch_id)
         : "",
+    groupId: s.groupId ? String(s.groupId) : s.group_id ? String(s.group_id) : undefined,
+    batch: batchName
+      ? {
+          id: String(s.batchId ?? s.batch_id ?? ""),
+          name: String(batchName),
+        }
+      : undefined,
+    group: groupName
+      ? {
+          id: String(s.groupId ?? s.group_id ?? ""),
+          name: String(groupName),
+        }
+      : undefined,
   };
 };
 
